@@ -1,0 +1,60 @@
+﻿@model IEnumerable<Microsoft.Office365.SharePoint.IFileSystemItem>
+
+@{
+    ViewBag.Title = "SharePoint Sample";
+}
+
+<h2>@ViewBag.Title.</h2>
+<h3>Items in the "Shared with Everyone" folder</h3>
+
+<table class="table table-bordered table-striped">
+    <tr>
+        <th>
+            Name
+        </th>
+        <th>
+            Last Modified on
+        </th>
+    </tr>
+
+    @{
+        //To display dates and times using the user's local timezone:
+        //   * On the server-side, calculate the number of milliseconds elapsed since the Date epoch
+        //     used by JavaScript.
+        //   * In JavaScript, convert the milliseconds to a timezone-aware string.
+        DateTime JavaScriptDateEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    }
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                <span>@item.Name</span>
+            </td>
+            <td>
+                @* Create an empty span, tagged with a "data-datetime" attribute representing the
+                    milliseconds since JavaScript's epoch time.
+                    A JavaScript function (below) will then convert the attribute into a timezone-aware string. *@
+                <span data-datetime="@item.TimeLastModified.Subtract(JavaScriptDateEpoch).TotalMilliseconds"></span>
+            </td>
+        </tr>
+    }
+</table>
+@using (Html.BeginForm("UploadFile", "O365Sites", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <input type="file" name="FileUpload" /><br />
+    <input type="submit" name="Submit" id="Submit" value="Upload" />
+} 
+
+<script type="text/javascript">
+    // Finds all spans tagged with a "data-datetime" attribute, and sets their texts
+    // based on the user's local timezone and locale.
+    var allSpans = document.getElementsByTagName("span");
+    for (var i = 0; i < allSpans.length ; i++) {
+        var span = allSpans[i];
+        if (span.attributes["data-datetime"]) {
+            var date = new Date(0); // Initialize the Date object to the epoch.
+            date.setUTCMilliseconds(span.attributes["data-datetime"].value);
+            span.textContent = date.toLocaleString();
+        }
+    }
+</script>
